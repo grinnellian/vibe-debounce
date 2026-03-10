@@ -6,6 +6,7 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -54,5 +55,13 @@ class RingerStateManagerTest {
         ringerStateManager.release()
         // mute sets SILENT, release restores SILENT — both set the same value
         verify(audioManager, org.mockito.Mockito.times(2)).ringerMode = AudioManager.RINGER_MODE_SILENT
+    }
+
+    @Test
+    fun `ringer mode is never set to NORMAL during active debounce`() {
+        whenever(audioManager.ringerMode).thenReturn(AudioManager.RINGER_MODE_NORMAL)
+        ringerStateManager.mute()
+        // Verify only SILENT was set, never NORMAL
+        verify(audioManager, never()).ringerMode = AudioManager.RINGER_MODE_NORMAL
     }
 }

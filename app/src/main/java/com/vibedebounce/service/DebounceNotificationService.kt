@@ -1,16 +1,12 @@
 package com.vibedebounce.service
 
 import android.app.Notification
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.media.AudioManager
-import android.os.VibrationEffect
 import android.os.Vibrator
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
-import androidx.core.app.NotificationCompat
-import com.vibedebounce.R
 import com.vibedebounce.model.DebounceTimer
 import com.vibedebounce.model.SenderKey
 import com.vibedebounce.prefs.DebouncePrefs
@@ -18,11 +14,11 @@ import com.vibedebounce.prefs.DebouncePrefs
 class DebounceNotificationService : NotificationListenerService() {
 
     companion object {
-        const val CHANNEL_ID = "debounce_new_thread"
         const val DEFAULT_DEBOUNCE_MS = DebouncePrefs.DEFAULT_SECONDS * 1000L
     }
 
     private lateinit var ringerStateManager: RingerStateManager
+    private lateinit var notifier: NewThreadNotifier
     private lateinit var debouncePrefs: DebouncePrefs
     private val activeTimers = mutableMapOf<SenderKey, DebounceTimer>()
     private var debounceWindowMs = DEFAULT_DEBOUNCE_MS
@@ -33,7 +29,10 @@ class DebounceNotificationService : NotificationListenerService() {
         ringerStateManager = RingerStateManager(audioManager)
         debouncePrefs = DebouncePrefs(this)
         debounceWindowMs = debouncePrefs.debounceWindowSeconds * 1000L
-        createNotificationChannel()
+
+        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notifier = NewThreadNotifier(this, vibrator, nm)
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
@@ -48,7 +47,7 @@ class DebounceNotificationService : NotificationListenerService() {
         }
 
         if (ringerStateManager.isActive()) {
-            fireNewThreadNotification(title)
+            notifier.fire(title)
         }
 
         ringerStateManager.mute()
@@ -64,40 +63,6 @@ class DebounceNotificationService : NotificationListenerService() {
     private fun onTimerExpired(key: SenderKey) {
         activeTimers.remove(key)
         ringerStateManager.release()
-    }
-
-    private fun fireNewThreadNotification(senderName: String) {
-        val savedMode = (getSystemService(Context.AUDIO_SERVICE) as AudioManager).ringerMode
-        val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        am.ringerMode = AudioManager.RINGER_MODE_NORMAL
-
-        val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        vibrator.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE))
-
-        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("New conversation")
-            .setContentText("Message from $senderName")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setAutoCancel(true)
-            .build()
-
-        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.notify(senderName.hashCode(), notification)
-
-        am.ringerMode = savedMode
-    }
-
-    private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            "New conversation alerts",
-            NotificationManager.IMPORTANCE_HIGH
-        ).apply {
-            description = "Alerts when a new sender messages during an active debounce"
-        }
-        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.createNotificationChannel(channel)
     }
 
     fun setDebounceWindow(ms: Long) {
