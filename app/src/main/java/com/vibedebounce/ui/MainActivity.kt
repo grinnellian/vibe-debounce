@@ -1,6 +1,7 @@
 package com.vibedebounce.ui
 
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Typeface
 import android.os.Bundle
 import android.provider.Settings
@@ -9,16 +10,20 @@ import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.vibedebounce.databinding.ActivityMainBinding
+import com.vibedebounce.prefs.AppPrefs
 import com.vibedebounce.prefs.DebouncePrefs
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var debouncePrefs: DebouncePrefs
+    private lateinit var appPrefs: AppPrefs
     private lateinit var permissionChecker: PermissionChecker
     private lateinit var permissionGuard: PermissionGuard
     private lateinit var serviceStatusProvider: ServiceStatusProviderContract
+    private lateinit var appListAdapter: AppListAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,18 +31,21 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         debouncePrefs = DebouncePrefs(this)
+        appPrefs = AppPrefs(this)
         permissionChecker = PermissionChecker(this)
         permissionGuard = PermissionGuard(permissionChecker)
         serviceStatusProvider = ServiceStatusProvider()
 
         setupDebounceSlider()
         setupPermissionButtons()
+        setupAppList()
     }
 
     override fun onResume() {
         super.onResume()
         updatePermissionStatus()
         updateServiceStatus()
+        populateAppList()
     }
 
     private fun updateServiceStatus() {
@@ -95,6 +103,42 @@ class MainActivity : AppCompatActivity() {
         binding.statusDndAccess.text = if (dndAccessGranted) "Granted" else "Not granted"
         binding.btnNotificationAccess.isEnabled = !notificationAccessGranted
         binding.btnDndAccess.isEnabled = !dndAccessGranted
+    }
+
+    private fun setupAppList() {
+        appListAdapter = AppListAdapter { packageName, enabled ->
+            appPrefs.setAppEnabled(packageName, enabled)
+        }
+        binding.appList.layoutManager = LinearLayoutManager(this)
+        binding.appList.adapter = appListAdapter
+    }
+
+    private fun populateAppList() {
+        val seenPackages = appPrefs.getSeenPackages().sorted()
+        if (seenPackages.isEmpty()) {
+            binding.appListEmpty.visibility = View.VISIBLE
+            binding.appList.visibility = View.GONE
+            return
+        }
+
+        binding.appListEmpty.visibility = View.GONE
+        binding.appList.visibility = View.VISIBLE
+
+        val pm = packageManager
+        val items = seenPackages.map { pkg ->
+            val appInfo = try {
+                pm.getApplicationInfo(pkg, 0)
+            } catch (e: PackageManager.NameNotFoundException) {
+                null
+            }
+            AppItem(
+                packageName = pkg,
+                label = appInfo?.let { pm.getApplicationLabel(it).toString() } ?: pkg,
+                icon = appInfo?.let { pm.getApplicationIcon(it) },
+                enabled = appPrefs.isAppEnabled(pkg)
+            )
+        }
+        appListAdapter.submitList(items)
     }
 
     private fun populateExplanations(explanations: List<PermissionExplanation>) {

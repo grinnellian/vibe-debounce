@@ -203,6 +203,30 @@
                 android:textSize="14sp"
                 android:layout_marginBottom="32dp" />
 
+            <!-- Per-app debouncing -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Per-app debouncing"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:id="@+id/app_list_empty"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No apps seen yet. Apps will appear here after they send notifications."
+                android:textSize="13sp"
+                android:visibility="gone"
+                android:layout_marginBottom="16dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/app_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false" />
+
         </LinearLayout>
 
     </LinearLayout>

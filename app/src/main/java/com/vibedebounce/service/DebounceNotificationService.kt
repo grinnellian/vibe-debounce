@@ -11,6 +11,7 @@ import android.service.notification.StatusBarNotification
 import androidx.annotation.VisibleForTesting
 import com.vibedebounce.model.DebounceTimer
 import com.vibedebounce.model.SenderKey
+import com.vibedebounce.prefs.AppPrefs
 import com.vibedebounce.prefs.DebouncePrefs
 
 class DebounceNotificationService : NotificationListenerService() {
@@ -35,6 +36,7 @@ class DebounceNotificationService : NotificationListenerService() {
     private lateinit var ringerStateManager: RingerStateManager
     private lateinit var notifier: NewThreadNotifier
     private lateinit var debouncePrefs: DebouncePrefs
+    private lateinit var appPrefs: AppPrefs
     private lateinit var foregroundNotificationManager: ForegroundNotificationManager
     private val activeTimers = mutableMapOf<SenderKey, DebounceTimer>()
     @VisibleForTesting
@@ -51,6 +53,7 @@ class DebounceNotificationService : NotificationListenerService() {
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         ringerStateManager = RingerStateManager(audioManager)
         debouncePrefs = DebouncePrefs(this)
+        appPrefs = AppPrefs(this)
         debounceWindowMs = debouncePrefs.debounceWindowSeconds * 1000L
         debouncePrefs.registerOnChangeListener(prefsListener)
 
@@ -76,6 +79,9 @@ class DebounceNotificationService : NotificationListenerService() {
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
+        recordSeenApp(sbn.packageName)
+        if (!shouldDebounce(sbn.packageName)) return
+
         val extras = sbn.notification.extras
         val title = extras.getString(Notification.EXTRA_TITLE) ?: return
         val key = SenderKey(sbn.packageName, title)
@@ -115,6 +121,16 @@ class DebounceNotificationService : NotificationListenerService() {
             ForegroundNotificationManager.NOTIFICATION_ID,
             foregroundNotificationManager.buildNotification(activeTimers.size)
         )
+    }
+
+    @VisibleForTesting
+    internal fun recordSeenApp(packageName: String) {
+        appPrefs.addSeenPackage(packageName)
+    }
+
+    @VisibleForTesting
+    internal fun shouldDebounce(packageName: String): Boolean {
+        return appPrefs.isAppEnabled(packageName)
     }
 
     override fun onDestroy() {
