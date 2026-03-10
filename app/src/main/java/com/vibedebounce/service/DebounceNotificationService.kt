@@ -20,6 +20,7 @@ class DebounceNotificationService : NotificationListenerService() {
     private lateinit var ringerStateManager: RingerStateManager
     private lateinit var notifier: NewThreadNotifier
     private lateinit var debouncePrefs: DebouncePrefs
+    private lateinit var foregroundNotificationManager: ForegroundNotificationManager
     private val activeTimers = mutableMapOf<SenderKey, DebounceTimer>()
     private var debounceWindowMs = DEFAULT_DEBOUNCE_MS
 
@@ -33,6 +34,18 @@ class DebounceNotificationService : NotificationListenerService() {
         val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notifier = NewThreadNotifier(this, vibrator, nm)
+        foregroundNotificationManager = ForegroundNotificationManager(this)
+    }
+
+    override fun onListenerConnected() {
+        startForeground(
+            ForegroundNotificationManager.NOTIFICATION_ID,
+            foregroundNotificationManager.buildNotification(activeTimers.size)
+        )
+    }
+
+    override fun onListenerDisconnected() {
+        stopForeground(STOP_FOREGROUND_REMOVE)
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
@@ -54,6 +67,7 @@ class DebounceNotificationService : NotificationListenerService() {
         val timer = DebounceTimer { expiredKey -> onTimerExpired(expiredKey) }
         timer.start(key, debounceWindowMs)
         activeTimers[key] = timer
+        updateForegroundNotification()
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification) {
@@ -63,6 +77,15 @@ class DebounceNotificationService : NotificationListenerService() {
     private fun onTimerExpired(key: SenderKey) {
         activeTimers.remove(key)
         ringerStateManager.release()
+        updateForegroundNotification()
+    }
+
+    private fun updateForegroundNotification() {
+        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.notify(
+            ForegroundNotificationManager.NOTIFICATION_ID,
+            foregroundNotificationManager.buildNotification(activeTimers.size)
+        )
     }
 
     fun setDebounceWindow(ms: Long) {
