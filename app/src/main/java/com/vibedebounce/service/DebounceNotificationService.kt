@@ -13,15 +13,17 @@ import androidx.core.app.NotificationCompat
 import com.vibedebounce.R
 import com.vibedebounce.model.DebounceTimer
 import com.vibedebounce.model.SenderKey
+import com.vibedebounce.prefs.DebouncePrefs
 
 class DebounceNotificationService : NotificationListenerService() {
 
     companion object {
         const val CHANNEL_ID = "debounce_new_thread"
-        const val DEFAULT_DEBOUNCE_MS = 90_000L
+        const val DEFAULT_DEBOUNCE_MS = DebouncePrefs.DEFAULT_SECONDS * 1000L
     }
 
     private lateinit var ringerStateManager: RingerStateManager
+    private lateinit var debouncePrefs: DebouncePrefs
     private val activeTimers = mutableMapOf<SenderKey, DebounceTimer>()
     private var debounceWindowMs = DEFAULT_DEBOUNCE_MS
 
@@ -29,6 +31,8 @@ class DebounceNotificationService : NotificationListenerService() {
         super.onCreate()
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         ringerStateManager = RingerStateManager(audioManager)
+        debouncePrefs = DebouncePrefs(this)
+        debounceWindowMs = debouncePrefs.debounceWindowSeconds * 1000L
         createNotificationChannel()
     }
 
@@ -98,5 +102,6 @@ class DebounceNotificationService : NotificationListenerService() {
 
     fun setDebounceWindow(ms: Long) {
         debounceWindowMs = ms
+        debouncePrefs.debounceWindowSeconds = (ms / 1000).toInt()
     }
 }
