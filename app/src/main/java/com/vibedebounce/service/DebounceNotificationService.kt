@@ -17,6 +17,19 @@ class DebounceNotificationService : NotificationListenerService() {
 
     companion object {
         const val DEFAULT_DEBOUNCE_MS = DebouncePrefs.DEFAULT_SECONDS * 1000L
+
+        @Volatile
+        var isRunning: Boolean = false
+            private set
+
+        @Volatile
+        var activeWindowCount: Int = 0
+            private set
+
+        internal fun resetState() {
+            isRunning = false
+            activeWindowCount = 0
+        }
     }
 
     private lateinit var ringerStateManager: RingerStateManager
@@ -48,6 +61,8 @@ class DebounceNotificationService : NotificationListenerService() {
     }
 
     override fun onListenerConnected() {
+        isRunning = true
+        activeWindowCount = activeTimers.size
         startForeground(
             ForegroundNotificationManager.NOTIFICATION_ID,
             foregroundNotificationManager.buildNotification(activeTimers.size)
@@ -55,6 +70,8 @@ class DebounceNotificationService : NotificationListenerService() {
     }
 
     override fun onListenerDisconnected() {
+        isRunning = false
+        activeWindowCount = 0
         stopForeground(STOP_FOREGROUND_REMOVE)
     }
 
@@ -77,6 +94,7 @@ class DebounceNotificationService : NotificationListenerService() {
         val timer = DebounceTimer { expiredKey -> onTimerExpired(expiredKey) }
         timer.start(key, debounceWindowMs)
         activeTimers[key] = timer
+        activeWindowCount = activeTimers.size
         updateForegroundNotification()
     }
 
@@ -86,6 +104,7 @@ class DebounceNotificationService : NotificationListenerService() {
 
     private fun onTimerExpired(key: SenderKey) {
         activeTimers.remove(key)
+        activeWindowCount = activeTimers.size
         ringerStateManager.release()
         updateForegroundNotification()
     }

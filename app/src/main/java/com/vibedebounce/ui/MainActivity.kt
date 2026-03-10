@@ -18,6 +18,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var debouncePrefs: DebouncePrefs
     private lateinit var permissionChecker: PermissionChecker
     private lateinit var permissionGuard: PermissionGuard
+    private lateinit var serviceStatusProvider: ServiceStatusProviderContract
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,6 +28,7 @@ class MainActivity : AppCompatActivity() {
         debouncePrefs = DebouncePrefs(this)
         permissionChecker = PermissionChecker(this)
         permissionGuard = PermissionGuard(permissionChecker)
+        serviceStatusProvider = ServiceStatusProvider()
 
         setupDebounceSlider()
         setupPermissionButtons()
@@ -35,6 +37,12 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         updatePermissionStatus()
+        updateServiceStatus()
+    }
+
+    private fun updateServiceStatus() {
+        binding.serviceStatusValue.text = serviceStatusProvider.statusText()
+        binding.activeWindowsValue.text = serviceStatusProvider.activeWindowsText()
     }
 
     private fun setupDebounceSlider() {
