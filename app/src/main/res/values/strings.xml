@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Debounce</string>
+    <string name="permissions_required_title">Permissions Required</string>
+    <string name="permissions_required_subtitle">Debounce needs the following permissions to work. Without them, the app cannot detect or silence repeat notifications.</string>
+    <string name="notification_listener_title">Notification Access</string>
+    <string name="notification_listener_explanation">Lets Debounce see when notifications arrive so it can detect message bursts from the same sender. Your message content is never read or stored.</string>
+    <string name="dnd_access_title">Do Not Disturb Access</string>
+    <string name="dnd_access_explanation">Lets Debounce briefly silence your phone when repeat messages arrive, then restore your previous sound setting automatically.</string>
 </resources>
