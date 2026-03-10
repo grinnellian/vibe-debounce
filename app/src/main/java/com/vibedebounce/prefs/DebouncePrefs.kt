@@ -7,7 +7,7 @@ class DebouncePrefs(context: Context) {
 
     companion object {
         private const val PREFS_FILE = "debounce_prefs"
-        private const val KEY_DEBOUNCE_SECONDS = "debounce_window_seconds"
+        internal const val KEY_DEBOUNCE_SECONDS = "debounce_window_seconds"
         const val DEFAULT_SECONDS = 90
     }
 
@@ -19,4 +19,12 @@ class DebouncePrefs(context: Context) {
         set(value) {
             sharedPrefs.edit().putInt(KEY_DEBOUNCE_SECONDS, value).apply()
         }
+
+    fun registerOnChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        sharedPrefs.registerOnSharedPreferenceChangeListener(listener)
+    }
+
+    fun unregisterOnChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        sharedPrefs.unregisterOnSharedPreferenceChangeListener(listener)
+    }
 }

@@ -3,10 +3,12 @@ package com.vibedebounce.service
 import android.app.Notification
 import android.app.NotificationManager
 import android.content.Context
+import android.content.SharedPreferences
 import android.media.AudioManager
 import android.os.Vibrator
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
+import androidx.annotation.VisibleForTesting
 import com.vibedebounce.model.DebounceTimer
 import com.vibedebounce.model.SenderKey
 import com.vibedebounce.prefs.DebouncePrefs
@@ -22,7 +24,14 @@ class DebounceNotificationService : NotificationListenerService() {
     private lateinit var debouncePrefs: DebouncePrefs
     private lateinit var foregroundNotificationManager: ForegroundNotificationManager
     private val activeTimers = mutableMapOf<SenderKey, DebounceTimer>()
-    private var debounceWindowMs = DEFAULT_DEBOUNCE_MS
+    @VisibleForTesting
+    internal var debounceWindowMs = DEFAULT_DEBOUNCE_MS
+
+    private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == DebouncePrefs.KEY_DEBOUNCE_SECONDS) {
+            debounceWindowMs = debouncePrefs.debounceWindowSeconds * 1000L
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -30,6 +39,7 @@ class DebounceNotificationService : NotificationListenerService() {
         ringerStateManager = RingerStateManager(audioManager)
         debouncePrefs = DebouncePrefs(this)
         debounceWindowMs = debouncePrefs.debounceWindowSeconds * 1000L
+        debouncePrefs.registerOnChangeListener(prefsListener)
 
         val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -88,8 +98,8 @@ class DebounceNotificationService : NotificationListenerService() {
         )
     }
 
-    fun setDebounceWindow(ms: Long) {
-        debounceWindowMs = ms
-        debouncePrefs.debounceWindowSeconds = (ms / 1000).toInt()
+    override fun onDestroy() {
+        debouncePrefs.unregisterOnChangeListener(prefsListener)
+        super.onDestroy()
     }
 }
