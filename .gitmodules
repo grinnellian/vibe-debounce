@@ -1,0 +1,4 @@
+[submodule ".ai-lindale"]
+	path = .ai-lindale
+	url = https://github.com/grinnellian/ai-lindale.git
+	branch = dx-007-adoption-guide

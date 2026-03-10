@@ -1,0 +1,17 @@
+# team-config.yml — Project-specific configuration for the Ainulindale framework.
+
+# Project metadata
+project:
+  name: vibe-debounce
+  description: Android app that debounces notification vibrations from rapid-fire messaging
+
+# Domain consultant configuration
+consultant:
+  role_name: android-consultant
+  domain_hint: Android platform APIs (NotificationListenerService, AudioManager, Do Not Disturb)
+
+# Toolchain — project-specific build/test commands
+toolchain:
+  test: ./gradlew test
+  build: ./gradlew assembleDebug
+  lint: ./gradlew lint

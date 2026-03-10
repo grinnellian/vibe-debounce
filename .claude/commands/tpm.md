@@ -1,0 +1,1 @@
+../../.ai-lindale/.claude/commands/tpm.md
