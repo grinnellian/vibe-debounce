@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Debounce</string>
+    <string name="app_name">Vibe Debounce</string>
     <string name="permissions_required_title">Permissions Required</string>
     <string name="permissions_required_subtitle">Debounce needs the following permissions to work. Without them, the app cannot detect or silence repeat notifications.</string>
     <string name="notification_listener_title">Notification Access</string>
