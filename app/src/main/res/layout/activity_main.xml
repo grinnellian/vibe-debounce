@@ -56,82 +56,122 @@
                     android:textSize="14sp"
                     android:layout_marginBottom="16dp" />
 
-                <LinearLayout
-                    android:id="@+id/permission_explanations_container"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="16dp" />
-
                 <!-- Notification Access -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
+                    android:orientation="vertical"
                     android:layout_marginBottom="12dp">
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
 
-                        <TextView
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Notification access"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:id="@+id/status_notification_access"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Not granted"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+
+                        <ImageView
+                            android:id="@+id/checkmark_notification_access"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/checkbox_on_background"
+                            android:contentDescription="Granted"
+                            android:visibility="gone" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_notification_access"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Notification access"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/status_notification_access"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Not granted"
-                            android:textSize="12sp" />
+                            android:text="Grant"
+                            style="@style/Widget.Material3.Button.OutlinedButton" />
                     </LinearLayout>
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_notification_access"
+                    <TextView
+                        android:id="@+id/explanation_notification_access"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Grant"
-                        style="@style/Widget.Material3.Button.OutlinedButton" />
+                        android:text="@string/notification_listener_explanation"
+                        android:textSize="12sp"
+                        android:layout_marginTop="4dp"
+                        android:visibility="visible" />
                 </LinearLayout>
 
                 <!-- DND Access -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical">
+                    android:orientation="vertical"
+                    android:layout_marginBottom="12dp">
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
 
-                        <TextView
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Do Not Disturb access"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:id="@+id/status_dnd_access"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Not granted"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+
+                        <ImageView
+                            android:id="@+id/checkmark_dnd_access"
+                            android:layout_width="24dp"
+                            android:layout_height="24dp"
+                            android:src="@android:drawable/checkbox_on_background"
+                            android:contentDescription="Granted"
+                            android:visibility="gone" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_dnd_access"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Do Not Disturb access"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/status_dnd_access"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Not granted"
-                            android:textSize="12sp" />
+                            android:text="Grant"
+                            style="@style/Widget.Material3.Button.OutlinedButton" />
                     </LinearLayout>
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_dnd_access"
+                    <TextView
+                        android:id="@+id/explanation_dnd_access"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Grant"
-                        style="@style/Widget.Material3.Button.OutlinedButton" />
+                        android:text="@string/dnd_access_explanation"
+                        android:textSize="12sp"
+                        android:layout_marginTop="4dp"
+                        android:visibility="visible" />
                 </LinearLayout>
 
             </LinearLayout>
