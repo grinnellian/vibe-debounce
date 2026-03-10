@@ -13,7 +13,7 @@ class AppPrefs(context: Context) {
     private val sharedPrefs = context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
 
     fun getSeenPackages(): Set<String> =
-        sharedPrefs.getStringSet(KEY_SEEN_PACKAGES, emptySet()) ?: emptySet()
+        sharedPrefs.getStringSet(KEY_SEEN_PACKAGES, emptySet())?.toSet() ?: emptySet()
 
     fun addSeenPackage(packageName: String) {
         val current = getSeenPackages().toMutableSet()

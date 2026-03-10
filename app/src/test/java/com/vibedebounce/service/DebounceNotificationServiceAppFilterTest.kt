@@ -46,7 +46,7 @@ class DebounceNotificationServiceAppFilterTest {
     @Test
     fun `shouldDebounce returns false when app is disabled`() {
         appPrefs.setAppEnabled("com.example.chat", false)
-        assertTrue(!service.shouldDebounce("com.example.chat"))
+        assertFalse(service.shouldDebounce("com.example.chat"))
     }
 
     @Test
