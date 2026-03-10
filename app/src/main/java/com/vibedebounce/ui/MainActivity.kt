@@ -9,16 +9,19 @@ import android.provider.Settings
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import com.vibedebounce.databinding.ActivityMainBinding
+import com.vibedebounce.prefs.DebouncePrefs
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var debouncePrefs: DebouncePrefs
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        debouncePrefs = DebouncePrefs(this)
         setupDebounceSlider()
         setupPermissionButtons()
     }
@@ -30,8 +33,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupDebounceSlider() {
         binding.debounceSlider.max = 180
-        binding.debounceSlider.progress = 90
-        updateSliderLabel(90)
+        val saved = debouncePrefs.debounceWindowSeconds
+        binding.debounceSlider.progress = saved
+        updateSliderLabel(saved)
 
         binding.debounceSlider.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -39,7 +43,10 @@ class MainActivity : AppCompatActivity() {
                 updateSliderLabel(value)
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                val value = maxOf(seekBar?.progress ?: DebouncePrefs.DEFAULT_SECONDS, 15)
+                debouncePrefs.debounceWindowSeconds = value
+            }
         })
     }
 
