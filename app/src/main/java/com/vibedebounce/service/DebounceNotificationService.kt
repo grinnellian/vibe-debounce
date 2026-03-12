@@ -101,8 +101,13 @@ class DebounceNotificationService : NotificationListenerService() {
             return
         }
 
+        // Always vibrate for the first notification from a new sender.
+        // If another debounce window is already active, also post the new-thread notification.
+        // fire() calls vibrate() internally, so call one or the other -- not both.
         if (ringerStateManager.isActive()) {
             notifier.fire(title)
+        } else {
+            notifier.vibrate()
         }
 
         ringerStateManager.mute()
@@ -139,6 +144,11 @@ class DebounceNotificationService : NotificationListenerService() {
         if (::ringerStateManager.isInitialized) {
             ringerStateManager.releaseAll()
         }
+    }
+
+    @VisibleForTesting
+    internal fun setNotifierForTest(notifier: NewThreadNotifier) {
+        this.notifier = notifier
     }
 
     @VisibleForTesting
