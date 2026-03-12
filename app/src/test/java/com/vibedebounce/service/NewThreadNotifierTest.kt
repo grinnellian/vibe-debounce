@@ -52,4 +52,32 @@ class NewThreadNotifierTest {
         // has no AudioManager dependency. If this compiles, the invariant holds.
         notifier.fire("Charlie")
     }
+
+    @Test
+    fun `vibrate fires a one-shot vibration without posting a notification`() {
+        notifier.vibrate()
+
+        verify(vibrator).vibrate(any<VibrationEffect>())
+        verify(notificationManager, never()).notify(anyInt(), any())
+    }
+
+    @Test
+    fun `vibrate uses same duration as fire`() {
+        notifier.vibrate()
+
+        val expectedEffect = VibrationEffect.createOneShot(
+            NewThreadNotifier.VIBRATION_DURATION_MS,
+            VibrationEffect.DEFAULT_AMPLITUDE
+        )
+        verify(vibrator).vibrate(eq(expectedEffect))
+    }
+
+    @Test
+    fun `fire still vibrates and posts notification after extracting vibrate`() {
+        // Regression: ensure fire() behavior is unchanged
+        notifier.fire("Alice")
+
+        verify(vibrator).vibrate(any<VibrationEffect>())
+        verify(notificationManager).notify(eq("Alice".hashCode()), any())
+    }
 }

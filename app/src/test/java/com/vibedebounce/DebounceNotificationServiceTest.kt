@@ -1,13 +1,16 @@
 package com.vibedebounce
 
 import android.content.Context
+import android.service.notification.StatusBarNotification
 import androidx.test.core.app.ApplicationProvider
 import com.vibedebounce.prefs.DebouncePrefs
 import com.vibedebounce.service.DebounceNotificationService
+import com.vibedebounce.service.NewThreadNotifier
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.kotlin.*
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 
@@ -25,14 +28,9 @@ class DebounceNotificationServiceTest {
 
     @Test
     fun `onPreferenceChanged updates debounceWindowMs from SharedPreferences`() {
-        // Arrange: create service, manually invoke onCreate
         val controller = Robolectric.buildService(DebounceNotificationService::class.java)
         val service = controller.create().get()
-
-        // Act: change the pref (simulating user moving slider)
         prefs.debounceWindowSeconds = 45
-
-        // Assert: service picked up the new value
         assertEquals(45_000L, service.debounceWindowMs)
     }
 
@@ -49,10 +47,7 @@ class DebounceNotificationServiceTest {
         val controller = Robolectric.buildService(DebounceNotificationService::class.java)
         val service = controller.create().get()
         controller.destroy()
-
-        // After destroy, changing prefs should NOT update the service's field.
         prefs.debounceWindowSeconds = 15
-        // Service is destroyed; debounceWindowMs should retain its last value (the default 90s).
         assertEquals(DebouncePrefs.DEFAULT_SECONDS * 1000L, service.debounceWindowMs)
     }
 
@@ -62,19 +57,14 @@ class DebounceNotificationServiceTest {
         val service = controller.create().get()
         val rsm = service.getRingerStateManagerForTest()
 
-        // Simulate active debounce state: mute twice (as if 2 senders active)
         rsm.mute()
         rsm.mute()
         assertTrue(rsm.isActive())
 
-        // Trigger disconnect
         service.onListenerDisconnected()
 
-        // Ringer must be restored
         assertFalse(rsm.isActive())
         assertEquals(0, rsm.activeCount())
-
-        // Companion state must be reset
         assertFalse(DebounceNotificationService.isRunning)
         assertEquals(0, DebounceNotificationService.activeWindowCount)
     }
@@ -99,12 +89,92 @@ class DebounceNotificationServiceTest {
         val controller = Robolectric.buildService(DebounceNotificationService::class.java)
         val service = controller.create().get()
 
-        // Call disconnect then destroy -- both call clearAllTimersAndRestore
         service.onListenerDisconnected()
         controller.destroy()
 
-        // Should not throw, ringer state should be clean
         val rsm = service.getRingerStateManagerForTest()
         assertFalse(rsm.isActive())
+    }
+
+    @Test
+    fun `first notification from new sender vibrates before muting`() {
+        val controller = Robolectric.buildService(DebounceNotificationService::class.java)
+        val service = controller.create().get()
+
+        val mockNotifier: NewThreadNotifier = mock()
+        service.setNotifierForTest(mockNotifier)
+
+        val sbn = buildMockSbn("com.example.chat", "Alice")
+        service.onNotificationPosted(sbn)
+
+        verify(mockNotifier).vibrate()
+    }
+
+    @Test
+    fun `first notification from new sender does not post new-thread notification when no other debounce active`() {
+        val controller = Robolectric.buildService(DebounceNotificationService::class.java)
+        val service = controller.create().get()
+
+        val mockNotifier: NewThreadNotifier = mock()
+        service.setNotifierForTest(mockNotifier)
+
+        val sbn = buildMockSbn("com.example.chat", "Alice")
+        service.onNotificationPosted(sbn)
+
+        verify(mockNotifier).vibrate()
+        verify(mockNotifier, never()).fire(any())
+    }
+
+    @Test
+    fun `new sender during active debounce fires full notification`() {
+        val controller = Robolectric.buildService(DebounceNotificationService::class.java)
+        val service = controller.create().get()
+
+        val mockNotifier: NewThreadNotifier = mock()
+        service.setNotifierForTest(mockNotifier)
+
+        val sbn1 = buildMockSbn("com.example.chat", "Alice")
+        service.onNotificationPosted(sbn1)
+
+        reset(mockNotifier)
+
+        val sbn2 = buildMockSbn("com.example.chat", "Bob")
+        service.onNotificationPosted(sbn2)
+
+        // fire() handles vibration internally; mock won't delegate
+        verify(mockNotifier, never()).vibrate()
+        verify(mockNotifier).fire("Bob")
+    }
+
+    @Test
+    fun `repeat notification from same sender during debounce does not vibrate`() {
+        val controller = Robolectric.buildService(DebounceNotificationService::class.java)
+        val service = controller.create().get()
+
+        val mockNotifier: NewThreadNotifier = mock()
+        service.setNotifierForTest(mockNotifier)
+
+        val sbn = buildMockSbn("com.example.chat", "Alice")
+        service.onNotificationPosted(sbn)
+
+        reset(mockNotifier)
+
+        service.onNotificationPosted(sbn)
+
+        verify(mockNotifier, never()).vibrate()
+        verify(mockNotifier, never()).fire(any())
+    }
+
+    private fun buildMockSbn(packageName: String, title: String): StatusBarNotification {
+        val extras = android.os.Bundle().apply {
+            putString(android.app.Notification.EXTRA_TITLE, title)
+        }
+        val notification = android.app.Notification().apply {
+            this.extras = extras
+        }
+        val sbn: StatusBarNotification = mock()
+        whenever(sbn.packageName).thenReturn(packageName)
+        whenever(sbn.notification).thenReturn(notification)
+        return sbn
     }
 }
