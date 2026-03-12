@@ -55,4 +55,56 @@ class DebounceNotificationServiceTest {
         // Service is destroyed; debounceWindowMs should retain its last value (the default 90s).
         assertEquals(DebouncePrefs.DEFAULT_SECONDS * 1000L, service.debounceWindowMs)
     }
+
+    @Test
+    fun `onListenerDisconnected cancels all timers and restores ringer`() {
+        val controller = Robolectric.buildService(DebounceNotificationService::class.java)
+        val service = controller.create().get()
+        val rsm = service.getRingerStateManagerForTest()
+
+        // Simulate active debounce state: mute twice (as if 2 senders active)
+        rsm.mute()
+        rsm.mute()
+        assertTrue(rsm.isActive())
+
+        // Trigger disconnect
+        service.onListenerDisconnected()
+
+        // Ringer must be restored
+        assertFalse(rsm.isActive())
+        assertEquals(0, rsm.activeCount())
+
+        // Companion state must be reset
+        assertFalse(DebounceNotificationService.isRunning)
+        assertEquals(0, DebounceNotificationService.activeWindowCount)
+    }
+
+    @Test
+    fun `onDestroy cancels all timers and restores ringer`() {
+        val controller = Robolectric.buildService(DebounceNotificationService::class.java)
+        val service = controller.create().get()
+        val rsm = service.getRingerStateManagerForTest()
+
+        rsm.mute()
+        assertTrue(rsm.isActive())
+
+        controller.destroy()
+
+        assertFalse(rsm.isActive())
+        assertEquals(0, rsm.activeCount())
+    }
+
+    @Test
+    fun `clearAllTimersAndRestore is idempotent`() {
+        val controller = Robolectric.buildService(DebounceNotificationService::class.java)
+        val service = controller.create().get()
+
+        // Call disconnect then destroy -- both call clearAllTimersAndRestore
+        service.onListenerDisconnected()
+        controller.destroy()
+
+        // Should not throw, ringer state should be clean
+        val rsm = service.getRingerStateManagerForTest()
+        assertFalse(rsm.isActive())
+    }
 }
