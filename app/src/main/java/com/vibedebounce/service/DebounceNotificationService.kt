@@ -79,6 +79,8 @@ class DebounceNotificationService : NotificationListenerService() {
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
+        if (sbn.packageName == packageName) return
+
         recordSeenApp(sbn.packageName)
         if (!shouldDebounce(sbn.packageName)) return
 
