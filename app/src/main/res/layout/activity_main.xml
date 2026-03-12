@@ -89,12 +89,14 @@
                                 android:textSize="12sp" />
                         </LinearLayout>
 
-                        <ImageView
+                        <TextView
                             android:id="@+id/checkmark_notification_access"
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@android:drawable/checkbox_on_background"
-                            android:contentDescription="Granted"
+                            android:text="\u2713"
+                            android:textSize="18sp"
+                            android:textColor="@android:color/holo_green_dark"
+                            android:gravity="center"
                             android:visibility="gone" />
 
                         <com.google.android.material.button.MaterialButton
@@ -148,12 +150,14 @@
                                 android:textSize="12sp" />
                         </LinearLayout>
 
-                        <ImageView
+                        <TextView
                             android:id="@+id/checkmark_dnd_access"
                             android:layout_width="24dp"
                             android:layout_height="24dp"
-                            android:src="@android:drawable/checkbox_on_background"
-                            android:contentDescription="Granted"
+                            android:text="\u2713"
+                            android:textSize="18sp"
+                            android:textColor="@android:color/holo_green_dark"
+                            android:gravity="center"
                             android:visibility="gone" />
 
                         <com.google.android.material.button.MaterialButton
