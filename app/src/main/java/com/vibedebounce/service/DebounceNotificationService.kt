@@ -39,8 +39,15 @@ class DebounceNotificationService : NotificationListenerService() {
     private lateinit var appPrefs: AppPrefs
     private lateinit var foregroundNotificationManager: ForegroundNotificationManager
     private val activeTimers = mutableMapOf<SenderKey, DebounceTimer>()
+
     @VisibleForTesting
     internal var debounceWindowMs = DEFAULT_DEBOUNCE_MS
+
+    @VisibleForTesting
+    internal val activeTimerCount: Int get() = activeTimers.size
+
+    @VisibleForTesting
+    internal fun getRingerStateManagerForTest(): RingerStateManager = ringerStateManager
 
     private val prefsListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == DebouncePrefs.KEY_DEBOUNCE_SECONDS) {
@@ -73,8 +80,8 @@ class DebounceNotificationService : NotificationListenerService() {
     }
 
     override fun onListenerDisconnected() {
+        clearAllTimersAndRestore()
         isRunning = false
-        activeWindowCount = 0
         stopForeground(STOP_FOREGROUND_REMOVE)
     }
 
@@ -123,6 +130,15 @@ class DebounceNotificationService : NotificationListenerService() {
         )
     }
 
+    private fun clearAllTimersAndRestore() {
+        activeTimers.values.forEach { it.cancel() }
+        activeTimers.clear()
+        activeWindowCount = 0
+        if (::ringerStateManager.isInitialized) {
+            ringerStateManager.releaseAll()
+        }
+    }
+
     @VisibleForTesting
     internal fun recordSeenApp(packageName: String) {
         appPrefs.addSeenPackage(packageName)
@@ -134,6 +150,7 @@ class DebounceNotificationService : NotificationListenerService() {
     }
 
     override fun onDestroy() {
+        clearAllTimersAndRestore()
         debouncePrefs.unregisterOnChangeListener(prefsListener)
         super.onDestroy()
     }
