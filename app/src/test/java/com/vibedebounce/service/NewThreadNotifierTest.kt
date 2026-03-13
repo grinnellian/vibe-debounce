@@ -58,7 +58,7 @@ class NewThreadNotifierTest {
         notifier.vibrate()
 
         verify(vibrator).vibrate(any<VibrationEffect>())
-        verify(notificationManager, never()).notify(anyInt(), any())
+        verify(notificationManager, never()).notify(any(), any())
     }
 
     @Test
