@@ -26,6 +26,15 @@ class RingerStateManager(private val audioManager: AudioManager) {
     }
 
     @Synchronized
+    fun releaseAll() {
+        if (activeDebounceCount > 0) {
+            activeDebounceCount = 0
+            savedRingerMode?.let { audioManager.ringerMode = it }
+            savedRingerMode = null
+        }
+    }
+
+    @Synchronized
     fun isActive(): Boolean = activeDebounceCount > 0
 
     @Synchronized
