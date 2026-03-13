@@ -9,7 +9,7 @@ import androidx.core.app.NotificationCompat
 import com.vibedebounce.R
 
 /**
- * Fires a vibration and posts a notification for a new conversation thread.
+ * Fires a vibration and optionally posts a notification for a new conversation thread.
  * Uses the Vibrator API directly -- does NOT touch ringer mode.
  * This is safe to call regardless of the current ringer state because
  * Vibrator.vibrate() works in silent mode when the app holds VIBRATE permission.
@@ -36,17 +36,26 @@ class NewThreadNotifier(
     }
 
     /**
-     * Vibrates and posts a notification for a new conversation thread.
-     * Uses Vibrator API directly -- does NOT touch ringer mode.
+     * Fires a vibration using the Vibrator API directly.
+     * Does NOT post a notification. Does NOT touch ringer mode.
      * Safe to call regardless of current ringer state.
      */
-    fun fire(senderName: String) {
+    fun vibrate() {
         vibrator.vibrate(
             VibrationEffect.createOneShot(
                 VIBRATION_DURATION_MS,
                 VibrationEffect.DEFAULT_AMPLITUDE
             )
         )
+    }
+
+    /**
+     * Vibrates and posts a notification for a new conversation thread.
+     * Uses Vibrator API directly -- does NOT touch ringer mode.
+     * Safe to call regardless of current ringer state.
+     */
+    fun fire(senderName: String) {
+        vibrate()
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
